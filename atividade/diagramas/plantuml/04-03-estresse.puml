@@ -1,0 +1,22 @@
+@startuml
+title 4.3 Teste de estresse — acima da capacidade planejada
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+component "GeradorCarga\n<<Componente sob teste>>" as gerador
+component "ServicoPosicionamento" as servico
+component "ReceptorGPS" as receptor
+component "CalculadoraPosicao" as calc
+component "LimitadorFila" as limite
+component "MonitorRecursos" as monitor
+component "RelatorioDegradacao" as relatorio
+
+gerador --> servico : 10.000 solicitacoes simultaneas\n(valor ficticio adotado)
+servico --> receptor : coletar observacoes gravadas
+receptor --> calc : processar lote
+servico --> limite : aplicar limite e enfileirar
+limite --> gerador : rejeicao controlada / espera
+servico --> monitor : CPU, memoria, fila e erros
+monitor --> relatorio : medir limite e degradacao
+@enduml

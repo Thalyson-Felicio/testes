@@ -1,0 +1,24 @@
+@startuml
+title 3.1 Teste de aceitacao — UAT
+hide footbox
+skinparam shadowing false
+
+actor "Usuario representante" as usuario
+participant "AplicacaoNavegacao\n<<Sistema Externo>>" as app
+participant "ServicoPosicionamento\n<<Servico Real>>" as servico
+participant "ReceptorGPS\n<<Servico Real>>" as receptor
+participant "ProcessadorSinalGPS\n<<Servico Real>>" as processador
+participant "CalculadoraPosicao\n<<Servico Real>>" as calc
+participant "Criterios de Aceitacao\n<<Componente sob teste>>" as criterios
+
+usuario -> app : solicitar minha posicao
+app -> servico : iniciar posicionamento
+servico -> receptor : coletar sinais de multiplos satelites
+receptor -> processador : sinais validos
+processador -> calc : observacoes + tempo + orbitas
+calc --> servico : posicao
+servico --> app : posicao com indicador de qualidade
+app --> usuario : exibir latitude/longitude
+usuario -> criterios : avaliar fluxo
+criterios --> usuario : aprovado se posicao e qualidade forem exibidas
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+title 2.4 Teste de fumaca — Smoke Testing
+hide footbox
+skinparam shadowing false
+
+participant "SmokeSuite\n<<Componente sob teste>>" as suite
+participant "AplicacaoNavegacao\n<<Servico Real>>" as app
+participant "ServicoPosicionamento\n<<Servico Real>>" as servico
+participant "ReceptorGPS\n<<Servico Real>>" as receptor
+participant "ValidadorSinal\n<<Servico Real>>" as validador
+participant "ProcessadorSinalGPS\n<<Servico Real>>" as processador
+participant "CalculadoraPosicao\n<<Servico Real>>" as calculadora
+
+suite -> app : abrir build
+app -> servico : solicitarPosicao()
+servico -> receptor : coletar amostra gravada
+receptor -> validador : validar()
+validador --> receptor : aprovado
+receptor -> processador : processar()
+processador -> calculadora : calcular()
+calculadora --> servico : posicao
+servico --> app : exibir posicao
+app --> suite : build essencial aprovada
+@enduml

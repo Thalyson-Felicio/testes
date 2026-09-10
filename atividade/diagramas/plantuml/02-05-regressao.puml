@@ -1,0 +1,23 @@
+@startuml
+title 2.5 Teste de regressao apos alteracao no ServicoEfemerides
+hide footbox
+skinparam shadowing false
+
+participant "SuiteRegressao\n<<Componente sob teste>>" as suite
+participant "ServicoEfemerides\n<<Servico Real alterado>>" as efem
+participant "RepositorioDadosOrbitais\n<<Servico Real>>" as repo
+participant "ServicoPosicionamento\n<<Servico Real>>" as servico
+participant "CalculadoraPosicao\n<<Servico Real>>" as calc
+participant "AplicacaoNavegacao\n<<Sistema Externo>>" as app
+
+suite -> efem : reexecutar consulta de efemerides
+efem -> repo : consultar(versao nova)
+repo --> efem : dados orbitais
+suite -> servico : reexecutar fluxo de posicao
+servico -> efem : obterDadosOrbitais()
+efem --> servico : efemerides
+servico -> calc : calcular()
+calc --> servico : posicao
+servico --> app : exibir posicao
+app --> suite : resultado comparado ao baseline
+@enduml

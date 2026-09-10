@@ -1,0 +1,43 @@
+@startuml
+title Arquitetura base — Sistema GPS Terra–Satélite
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Operador da estação" as operador
+component "AplicacaoNavegacao" as app <<Sistema Externo>>
+component "ServicoPosicionamento" as servico
+component "ReceptorGPS" as receptor
+component "ValidadorSinal" as validador
+component "ProcessadorSinalGPS" as processador
+component "SincronizadorTempo" as tempo
+component "CalculadoraPosicao" as calculadora
+component "ServicoEfemerides" as efemerides
+database "RepositorioDadosOrbitais" as repositorio
+component "CacheEfemerides" as cache
+component "EstacaoControleTerrestre" as controle
+component "ControleAcessoAtualizacao" as acesso
+component "AuditoriaSeguranca" as auditoria
+component "ConstelacaoGPS" as constelacao
+component "SateliteGPS" as satelite
+
+app --> servico : solicita posicao
+servico --> receptor : coleta observacoes
+receptor --> validador : verifica integridade
+validador --> receptor : sinais aprovados
+receptor --> processador : entrega sinais validos
+processador --> tempo : extrai marcas de tempo
+processador --> efemerides : solicita dados orbitais
+processador --> calculadora : observacoes processadas
+tempo --> calculadora : tempo sincronizado
+efemerides --> repositorio : consulta efemerides
+efemerides --> cache : usa copia de contingencia
+controle --> acesso : solicita atualizacao
+acesso --> repositorio : atualiza com permissao
+acesso --> auditoria : registra operacao
+constelacao o-- satelite
+satelite --> receptor : transmite sinal de navegacao
+operador --> controle : envia atualizacao autorizada
+servico --> calculadora : solicita calculo
+calculadora --> servico : latitude, longitude e instante
+@enduml

@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    participant S as ServicoPosicionamento (Servico Real)
+    participant E as ServicoEfemerides (Servico Real)
+    participant R as RepositorioDadosOrbitais (Falha Injetada)
+    participant K as CacheEfemerides (Servico Real)
+    participant M as MonitorRecuperacao
+    A->>S: solicitarPosicao()
+    S->>E: obterDadosOrbitais()
+    E->>R: consultar()
+    R--xE: indisponibilidade simulada
+    E->>M: registrar falha
+    E->>K: obter ultima copia valida
+    K-->>E: efemerides de contingencia
+    E-->>S: dados orbitais + indicador degradado
+    S-->>A: posicao calculada sem encerrar fluxo
+    M-->>A: alerta operacional

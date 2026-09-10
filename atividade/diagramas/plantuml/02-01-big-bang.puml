@@ -1,0 +1,32 @@
+@startuml
+title 2.1 Integracao nao incremental — Big Bang
+hide footbox
+skinparam shadowing false
+
+actor "AplicacaoNavegacao" as app
+participant "ServicoPosicionamento\n<<Servico Real>>" as servico
+participant "ReceptorGPS\n<<Servico Real>>" as receptor
+participant "ValidadorSinal\n<<Servico Real>>" as validador
+participant "ProcessadorSinalGPS\n<<Servico Real>>" as processador
+participant "SincronizadorTempo\n<<Servico Real>>" as tempo
+participant "ServicoEfemerides\n<<Servico Real>>" as efemerides
+database "RepositorioDadosOrbitais\n<<Servico Real>>" as repo
+participant "CalculadoraPosicao\n<<Servico Real>>" as calculadora
+participant "SatelitesGPS\n<<Sistema Externo>>" as satelites
+
+app -> servico : solicitarPosicao()
+satelites -> receptor : transmitir sinais de navegacao
+servico -> receptor : coletarObservacoes()
+receptor -> validador : validar(sinais)
+validador --> receptor : sinais validos
+receptor -> processador : processar(sinais)
+processador -> tempo : sincronizar(marcasDeTempo)
+tempo --> processador : tempo sincronizado
+processador -> efemerides : obter(identificadores, instante)
+efemerides -> repo : consultar(orbita)
+repo --> efemerides : efemerides validas
+efemerides --> processador : dados orbitais
+processador -> calculadora : calcular(observacoes, orbitas, tempo)
+calculadora --> servico : posicao
+servico --> app : devolverPosicao(posicao)
+@enduml

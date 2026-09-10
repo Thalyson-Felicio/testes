@@ -1,0 +1,30 @@
+classDiagram
+    class CalculadoraPosicao {
+        <<Componente sob teste>>
+        +calcular(observacoes, efemerides, tempo) Posicao
+        -resolverInterseccao(distancias) Posicao
+    }
+    class ObservacaoSatelite {
+        <<Dado de teste>>
+        +identificador
+        +pseudodistancia
+    }
+    class Efemerides {
+        <<Dado de teste>>
+        +orbita
+        +instanteValidade
+    }
+    class Posicao {
+        <<Resultado esperado>>
+        +latitude
+        +longitude
+        +altitude
+    }
+    class TesteCalculadoraPosicao {
+        <<Executor do teste>>
+        +deveCalcularPosicaoComQuatroSatelites()
+    }
+    TesteCalculadoraPosicao --> CalculadoraPosicao : chama
+    TesteCalculadoraPosicao --> ObservacaoSatelite : fornece dados controlados
+    TesteCalculadoraPosicao --> Efemerides : fornece dados controlados
+    CalculadoraPosicao --> Posicao : produz

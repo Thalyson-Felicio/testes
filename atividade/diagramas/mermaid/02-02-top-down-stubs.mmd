@@ -1,0 +1,9 @@
+flowchart LR
+    A["AplicacaoNavegacao\nSistema Externo"] --> S["ServicoPosicionamento\nComponente sob teste\nServico Real"]
+    S --> R["ReceptorGPSStub\nStub"]
+    S --> E["ServicoEfemeridesStub\nStub"]
+    S --> C["CalculadoraPosicaoStub\nStub"]
+    R -->|observacoes controladas| S
+    E -->|efemerides controladas| S
+    C -->|posicao conhecida| S
+    R -.-> N["Substitui o receptor inferior\ne evita sinais reais"]

@@ -1,0 +1,8 @@
+flowchart LR
+    G["GeradorCarga\nComponente sob teste"] -->|10.000 solicitacoes simultaneas\nvalor ficticio adotado| S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    R --> C["CalculadoraPosicao"]
+    S --> L["LimitadorFila"]
+    L -->|rejeicao controlada / espera| G
+    S --> M["MonitorRecursos"]
+    M --> D["RelatorioDegradacao"]

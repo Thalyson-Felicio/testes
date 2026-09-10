@@ -1,0 +1,24 @@
+@startuml
+title 3.2 Teste Alfa em ambiente controlado
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Equipe interna de QA" as qa
+component "VersaoAlfa\n<<Componente sob teste>>" as alfa
+component "AplicacaoNavegacao" as app
+component "ServicoPosicionamento" as servico
+component "ReceptorGPS" as receptor
+component "ConstelacaoGPS\n<<Sistema Externo simulado>>" as constelacao
+component "ColetorDiagnostico" as diagnostico
+
+qa --> alfa : executar cenarios guiados
+alfa --> app : usar interface
+app --> servico : solicitar posicao
+servico --> receptor : coletar sinais gravados
+constelacao --> receptor : fornecer sinais gravados
+receptor --> servico : observacoes e qualidade
+servico --> alfa : resultado + indicador de qualidade
+alfa --> diagnostico : registrar logs e dificuldades
+diagnostico --> qa : relatorio de defeitos
+@enduml

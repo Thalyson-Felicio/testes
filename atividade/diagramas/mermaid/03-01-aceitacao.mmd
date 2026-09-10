@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor U as Usuario representante
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    participant S as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant T as Criterios de Aceitacao (Componente sob teste)
+    U->>A: solicitar minha posicao
+    A->>S: iniciar posicionamento
+    S->>R: coletar sinais de multiplos satelites
+    R->>P: sinais validos
+    P->>C: observacoes + tempo + orbitas
+    C-->>S: posicao
+    S-->>A: posicao com indicador de qualidade
+    A-->>U: exibir latitude/longitude
+    U->>T: avaliar fluxo
+    T-->>U: aprovado se posicao e qualidade forem exibidas

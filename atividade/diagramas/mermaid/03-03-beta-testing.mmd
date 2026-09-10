@@ -1,0 +1,12 @@
+flowchart LR
+    U["Grupo piloto"] --> B["VersaoBeta\nComponente sob teste"]
+    B --> A["AplicacaoNavegacao"]
+    A --> S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    R -->|observacoes e qualidade| S
+    S --> A
+    A --> T["Telemetria"]
+    U --> F["Feedback"]
+    T --> B
+    F --> B
+    X["redes e aparelhos variados"] -.-> U

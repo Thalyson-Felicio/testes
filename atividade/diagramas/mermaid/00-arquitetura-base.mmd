@@ -1,0 +1,20 @@
+flowchart LR
+    O["Operador da estação"] --> C["EstacaoControleTerrestre"]
+    C --> Z["ControleAcessoAtualizacao"]
+    Z --> R[("RepositorioDadosOrbitais")]
+    Z --> AU["AuditoriaSeguranca"]
+    A["AplicacaoNavegacao\nSistema Externo"] --> S["ServicoPosicionamento"]
+    S --> G["ReceptorGPS"]
+    G --> V["ValidadorSinal"]
+    V -->|sinais aprovados| G
+    G --> P["ProcessadorSinalGPS"]
+    P --> T["SincronizadorTempo"]
+    P --> E["ServicoEfemerides"]
+    E --> R
+    E --> K["CacheEfemerides\ncopia de contingencia"]
+    P --> X["CalculadoraPosicao"]
+    T --> X
+    S --> X
+    X --> S
+    N["ConstelacaoGPS"] --> Q["SateliteGPS"]
+    Q -->|transmite sinal de navegacao| G

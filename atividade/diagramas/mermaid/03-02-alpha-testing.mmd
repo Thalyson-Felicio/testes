@@ -1,0 +1,11 @@
+flowchart LR
+    Q["Equipe interna de QA"] --> A["VersaoAlfa\nComponente sob teste"]
+    A --> I["AplicacaoNavegacao"]
+    I --> S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    G["ConstelacaoGPS\nSistema Externo simulado"] --> R
+    R -->|observacoes e qualidade| S
+    S --> A
+    A --> D["ColetorDiagnostico"]
+    D --> Q
+    G -.->|fornece sinais gravados| R

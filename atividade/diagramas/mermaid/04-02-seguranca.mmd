@@ -1,0 +1,10 @@
+flowchart LR
+    X["Operador sem permissao"] --> E["EstacaoControleTerrestre\nSistema Externo"]
+    E --> A["ControleAcessoAtualizacao\nComponente sob teste"]
+    A --> U["AuditoriaSeguranca"]
+    A -. bloqueia .-> R[("RepositorioDadosOrbitais\nServico Real")]
+    O["Operador autorizado"] --> E
+    E --> A
+    A -->|atualizar dados orbitais| R
+    X -.->|efemerides adulteradas| E
+    O -.->|efemerides assinadas| E

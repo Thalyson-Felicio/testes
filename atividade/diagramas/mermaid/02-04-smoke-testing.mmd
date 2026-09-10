@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant S as SmokeSuite (Componente sob teste)
+    participant A as AplicacaoNavegacao (Servico Real)
+    participant V as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant Q as ValidadorSinal (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    S->>A: abrir build
+    A->>V: solicitarPosicao()
+    V->>R: coletar amostra gravada
+    R->>Q: validar()
+    Q-->>R: aprovado
+    R->>P: processar()
+    P->>C: calcular()
+    C-->>V: posicao
+    V-->>A: exibir posicao
+    A-->>S: build essencial aprovada

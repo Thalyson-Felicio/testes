@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant A as AplicacaoNavegacao
+    participant S as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant V as ValidadorSinal (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant T as SincronizadorTempo (Servico Real)
+    participant E as ServicoEfemerides (Servico Real)
+    participant D as RepositorioDadosOrbitais (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant G as SatelitesGPS (Sistema Externo)
+    A->>S: solicitarPosicao()
+    G->>R: transmitir sinais de navegacao
+    S->>R: coletarObservacoes()
+    R->>V: validar(sinais)
+    V-->>R: sinais validos
+    R->>P: processar(sinais)
+    P->>T: sincronizar(marcasDeTempo)
+    T-->>P: tempo sincronizado
+    P->>E: obter(identificadores, instante)
+    E->>D: consultar(orbita)
+    D-->>E: efemerides validas
+    E-->>P: dados orbitais
+    P->>C: calcular(observacoes, orbitas, tempo)
+    C-->>S: posicao
+    S-->>A: devolverPosicao(posicao)

@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant S as SuiteRegressao (Componente sob teste)
+    participant E as ServicoEfemerides (Servico Real alterado)
+    participant R as RepositorioDadosOrbitais (Servico Real)
+    participant V as ServicoPosicionamento (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    S->>E: reexecutar consulta de efemerides
+    E->>R: consultar(versao nova)
+    R-->>E: dados orbitais
+    S->>V: reexecutar fluxo de posicao
+    V->>E: obterDadosOrbitais()
+    E-->>V: efemerides
+    V->>C: calcular()
+    C-->>V: posicao
+    V-->>A: exibir posicao
+    A-->>S: resultado comparado ao baseline

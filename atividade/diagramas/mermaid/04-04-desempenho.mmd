@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant G as GeradorCenarios (Componente sob teste)
+    participant A as AplicacaoNavegacao
+    participant S as ServicoPosicionamento
+    participant R as ReceptorGPS
+    participant P as ProcessadorSinalGPS
+    participant C as CalculadoraPosicao
+    participant M as ColetorMetricas
+    G->>A: executar cenarios representativos
+    A->>S: solicitarPosicao()
+    S->>R: coletar sinais gravados
+    R->>P: entregar sinais validos
+    P->>C: calcular com efemerides em cache
+    C-->>S: posicao
+    S-->>A: resposta
+    A-->>G: fim do cenario
+    G->>M: registrar latencia, vazao e recursos
+    M-->>G: comparar com limite do estudo
+    Note over G,M: Meta de 95% em até 2 s — valor fictício adotado para este estudo de caso.

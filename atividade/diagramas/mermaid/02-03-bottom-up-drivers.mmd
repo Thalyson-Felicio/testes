@@ -1,0 +1,12 @@
+flowchart LR
+    D["DriverTesteSinalGPS\nDriver"] --> V["ValidadorSinal\nServico Real"]
+    V --> P["ProcessadorSinalGPS\nServico Real\nComponente sob teste"]
+    P --> T["SincronizadorTempo\nServico Real"]
+    P --> E["ServicoEfemerides\nServico Real"]
+    E --> R[("RepositorioDadosOrbitais\nServico Real")]
+    R --> E
+    E --> P
+    P --> C["CalculadoraPosicao\nServico Real"]
+    T --> C
+    C -->|posicao calculada| D
+    N["O controlador superior real ainda não participa"] -.-> D

@@ -1,0 +1,28 @@
+@startuml
+title 4.4 Teste de desempenho — carga planejada
+hide footbox
+skinparam shadowing false
+
+participant "GeradorCenarios\n<<Componente sob teste>>" as gerador
+participant "AplicacaoNavegacao" as app
+participant "ServicoPosicionamento" as servico
+participant "ReceptorGPS" as receptor
+participant "ProcessadorSinalGPS" as processador
+participant "CalculadoraPosicao" as calc
+participant "ColetorMetricas" as metricas
+
+gerador -> app : executar cenarios representativos
+app -> servico : solicitarPosicao()
+servico -> receptor : coletar sinais gravados
+receptor -> processador : entregar sinais validos
+processador -> calc : calcular com efemerides em cache
+calc --> servico : posicao
+servico --> app : resposta
+app --> gerador : fim do cenario
+gerador -> metricas : registrar latencia, vazao e recursos
+metricas --> gerador : comparar com limite do estudo
+note over gerador,metricas
+Meta de 95% das respostas em ate 2 s:
+valor ficticio adotado para este estudo de caso.
+end note
+@enduml

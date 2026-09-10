@@ -1,0 +1,23 @@
+@startuml
+title 4.1 Teste de recuperacao — falha do repositorio orbital
+hide footbox
+skinparam shadowing false
+
+participant "AplicacaoNavegacao\n<<Sistema Externo>>" as app
+participant "ServicoPosicionamento\n<<Servico Real>>" as servico
+participant "ServicoEfemerides\n<<Servico Real>>" as efem
+database "RepositorioDadosOrbitais\n<<Falha Injetada>>" as primario
+database "CacheEfemerides\n<<Servico Real>>" as cache
+participant "MonitorRecuperacao" as monitor
+
+app -> servico : solicitarPosicao()
+servico -> efem : obterDadosOrbitais()
+efem -> primario : consultar()
+primario --x efem : indisponibilidade simulada
+efem -> monitor : registrar falha
+efem -> cache : obter ultima copia valida
+cache --> efem : efemerides de contingencia
+efem --> servico : dados orbitais + indicador degradado
+servico --> app : posicao calculada sem encerrar fluxo
+monitor --> app : alerta operacional
+@enduml
