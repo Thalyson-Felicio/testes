@@ -18,7 +18,32 @@ A arquitetura conceitual é a mesma em todas as abordagens:
 - `ServicoPosicionamento` coordena o fluxo e entrega o resultado à `AplicacaoNavegacao`.
 - `EstacaoControleTerrestre` monitora a constelação e atualiza os dados orbitais por um controle de acesso.
 
-Diagrama base: [PlantUML](diagramas/plantuml/00-arquitetura-base.puml) · [Mermaid](diagramas/mermaid/00-arquitetura-base.mmd)
+### Diagrama base
+
+```mermaid
+flowchart LR
+    O["Operador da estação"] --> C["EstacaoControleTerrestre"]
+    C --> Z["ControleAcessoAtualizacao"]
+    Z --> R[("RepositorioDadosOrbitais")]
+    Z --> AU["AuditoriaSeguranca"]
+    A["AplicacaoNavegacao\nSistema Externo"] --> S["ServicoPosicionamento"]
+    S --> G["ReceptorGPS"]
+    G --> V["ValidadorSinal"]
+    V -->|sinais aprovados| G
+    G --> P["ProcessadorSinalGPS"]
+    P --> T["SincronizadorTempo"]
+    P --> E["ServicoEfemerides"]
+    E --> R
+    E --> K["CacheEfemerides\ncopia de contingencia"]
+    P --> X["CalculadoraPosicao"]
+    T --> X
+    S --> X
+    X --> S
+    N["ConstelacaoGPS"] --> Q["SateliteGPS"]
+    Q -->|transmite sinal de navegacao| G
+```
+
+Fontes: [PlantUML](diagramas/plantuml/00-arquitetura-base.puml) · [Mermaid](diagramas/mermaid/00-arquitetura-base.mmd)
 
 ## 1. Teste de Unidade
 
@@ -30,7 +55,40 @@ Diagrama base: [PlantUML](diagramas/plantuml/00-arquitetura-base.puml) · [Merma
 
 **Defeitos que busca revelar:** erros em fórmulas e condicionais, associação incorreta entre satélite e órbita, tratamento indevido de dados incompletos e falhas de fronteira.
 
-Diagrama: [PlantUML](diagramas/plantuml/01-01-teste-unidade.puml) · [Mermaid](diagramas/mermaid/01-01-teste-unidade.mmd)
+```mermaid
+classDiagram
+    class CalculadoraPosicao {
+        <<Componente sob teste>>
+        +calcular(observacoes, efemerides, tempo) Posicao
+        -resolverInterseccao(distancias) Posicao
+    }
+    class ObservacaoSatelite {
+        <<Dado de teste>>
+        +identificador
+        +pseudodistancia
+    }
+    class Efemerides {
+        <<Dado de teste>>
+        +orbita
+        +instanteValidade
+    }
+    class Posicao {
+        <<Resultado esperado>>
+        +latitude
+        +longitude
+        +altitude
+    }
+    class TesteCalculadoraPosicao {
+        <<Executor do teste>>
+        +deveCalcularPosicaoComQuatroSatelites()
+    }
+    TesteCalculadoraPosicao --> CalculadoraPosicao : chama
+    TesteCalculadoraPosicao --> ObservacaoSatelite : fornece dados controlados
+    TesteCalculadoraPosicao --> Efemerides : fornece dados controlados
+    CalculadoraPosicao --> Posicao : produz
+```
+
+Fontes: [PlantUML](diagramas/plantuml/01-01-teste-unidade.puml) · [Mermaid](diagramas/mermaid/01-01-teste-unidade.mmd)
 
 ## 2. Teste de Integração
 
@@ -42,7 +100,36 @@ Diagrama: [PlantUML](diagramas/plantuml/01-01-teste-unidade.puml) · [Mermaid](d
 
 **Defeitos que busca revelar:** incompatibilidades de interfaces, formatos divergentes de observação, dependências não configuradas e falhas de comunicação entre módulos. A localização do defeito pode ser difícil porque muitas integrações são ativadas simultaneamente.
 
-Diagrama: [PlantUML](diagramas/plantuml/02-01-big-bang.puml) · [Mermaid](diagramas/mermaid/02-01-big-bang.mmd)
+```mermaid
+sequenceDiagram
+    participant A as AplicacaoNavegacao
+    participant S as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant V as ValidadorSinal (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant T as SincronizadorTempo (Servico Real)
+    participant E as ServicoEfemerides (Servico Real)
+    participant D as RepositorioDadosOrbitais (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant G as SatelitesGPS (Sistema Externo)
+    A->>S: solicitarPosicao()
+    G->>R: transmitir sinais de navegacao
+    S->>R: coletarObservacoes()
+    R->>V: validar(sinais)
+    V-->>R: sinais validos
+    R->>P: processar(sinais)
+    P->>T: sincronizar(marcasDeTempo)
+    T-->>P: tempo sincronizado
+    P->>E: obter(identificadores, instante)
+    E->>D: consultar(orbita)
+    D-->>E: efemerides validas
+    E-->>P: dados orbitais
+    P->>C: calcular(observacoes, orbitas, tempo)
+    C-->>S: posicao
+    S-->>A: devolverPosicao(posicao)
+```
+
+Fontes: [PlantUML](diagramas/plantuml/02-01-big-bang.puml) · [Mermaid](diagramas/mermaid/02-01-big-bang.mmd)
 
 ### 2.2 Integração Incremental Top-Down com Stubs
 
@@ -52,7 +139,19 @@ Diagrama: [PlantUML](diagramas/plantuml/02-01-big-bang.puml) · [Mermaid](diagra
 
 **Defeitos que busca revelar:** chamada com parâmetros errados, fluxo de controle incorreto, tratamento inadequado de sinal inválido, contratos incompatíveis e falhas na montagem da resposta.
 
-Diagrama: [PlantUML](diagramas/plantuml/02-02-top-down-stubs.puml) · [Mermaid](diagramas/mermaid/02-02-top-down-stubs.mmd)
+```mermaid
+flowchart LR
+    A["AplicacaoNavegacao\nSistema Externo"] --> S["ServicoPosicionamento\nComponente sob teste\nServico Real"]
+    S --> R["ReceptorGPSStub\nStub"]
+    S --> E["ServicoEfemeridesStub\nStub"]
+    S --> C["CalculadoraPosicaoStub\nStub"]
+    R -->|observacoes controladas| S
+    E -->|efemerides controladas| S
+    C -->|posicao conhecida| S
+    R -.-> N["Substitui o receptor inferior\ne evita sinais reais"]
+```
+
+Fontes: [PlantUML](diagramas/plantuml/02-02-top-down-stubs.puml) · [Mermaid](diagramas/mermaid/02-02-top-down-stubs.mmd)
 
 ### 2.3 Integração Incremental Bottom-Up com Drivers
 
@@ -62,7 +161,22 @@ Diagrama: [PlantUML](diagramas/plantuml/02-02-top-down-stubs.puml) · [Mermaid](
 
 **Defeitos que busca revelar:** perda de metadados, unidade de tempo incompatível, consulta orbital incorreta, observações malformadas e parâmetros incompatíveis entre os componentes da base.
 
-Diagrama: [PlantUML](diagramas/plantuml/02-03-bottom-up-drivers.puml) · [Mermaid](diagramas/mermaid/02-03-bottom-up-drivers.mmd)
+```mermaid
+flowchart LR
+    D["DriverTesteSinalGPS\nDriver"] --> V["ValidadorSinal\nServico Real"]
+    V --> P["ProcessadorSinalGPS\nServico Real\nComponente sob teste"]
+    P --> T["SincronizadorTempo\nServico Real"]
+    P --> E["ServicoEfemerides\nServico Real"]
+    E --> R[("RepositorioDadosOrbitais\nServico Real")]
+    R --> E
+    E --> P
+    P --> C["CalculadoraPosicao\nServico Real"]
+    T --> C
+    C -->|posicao calculada| D
+    N["O controlador superior real ainda não participa"] -.-> D
+```
+
+Fontes: [PlantUML](diagramas/plantuml/02-03-bottom-up-drivers.puml) · [Mermaid](diagramas/mermaid/02-03-bottom-up-drivers.mmd)
 
 ### 2.4 Teste de Fumaça — Smoke Testing
 
@@ -72,7 +186,28 @@ Diagrama: [PlantUML](diagramas/plantuml/02-03-bottom-up-drivers.puml) · [Mermai
 
 **Defeitos que busca revelar:** falha de inicialização, serviço indisponível, quebra do fluxo essencial, validação básica interrompida e impossibilidade de exibir uma posição.
 
-Diagrama: [PlantUML](diagramas/plantuml/02-04-smoke-testing.puml) · [Mermaid](diagramas/mermaid/02-04-smoke-testing.mmd)
+```mermaid
+sequenceDiagram
+    participant S as SmokeSuite (Componente sob teste)
+    participant A as AplicacaoNavegacao (Servico Real)
+    participant V as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant Q as ValidadorSinal (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    S->>A: abrir build
+    A->>V: solicitarPosicao()
+    V->>R: coletar amostra gravada
+    R->>Q: validar()
+    Q-->>R: aprovado
+    R->>P: processar()
+    P->>C: calcular()
+    C-->>V: posicao
+    V-->>A: exibir posicao
+    A-->>S: build essencial aprovada
+```
+
+Fontes: [PlantUML](diagramas/plantuml/02-04-smoke-testing.puml) · [Mermaid](diagramas/mermaid/02-04-smoke-testing.mmd)
 
 ### 2.5 Teste de Regressão
 
@@ -82,7 +217,27 @@ Diagrama: [PlantUML](diagramas/plantuml/02-04-smoke-testing.puml) · [Mermaid](d
 
 **Defeitos que busca revelar:** efeitos colaterais, mudança indevida de contrato, seleção errada de efemérides, cálculo alterado sem intenção e falhas no fluxo de posicionamento.
 
-Diagrama: [PlantUML](diagramas/plantuml/02-05-regressao.puml) · [Mermaid](diagramas/mermaid/02-05-regressao.mmd)
+```mermaid
+sequenceDiagram
+    participant S as SuiteRegressao (Componente sob teste)
+    participant E as ServicoEfemerides (Servico Real alterado)
+    participant R as RepositorioDadosOrbitais (Servico Real)
+    participant V as ServicoPosicionamento (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    S->>E: reexecutar consulta de efemerides
+    E->>R: consultar(versao nova)
+    R-->>E: dados orbitais
+    S->>V: reexecutar fluxo de posicao
+    V->>E: obterDadosOrbitais()
+    E-->>V: efemerides
+    V->>C: calcular()
+    C-->>V: posicao
+    V-->>A: exibir posicao
+    A-->>S: resultado comparado ao baseline
+```
+
+Fontes: [PlantUML](diagramas/plantuml/02-05-regressao.puml) · [Mermaid](diagramas/mermaid/02-05-regressao.mmd)
 
 ## 3. Teste de Validação
 
@@ -96,7 +251,28 @@ Diagrama: [PlantUML](diagramas/plantuml/02-05-regressao.puml) · [Mermaid](diagr
 
 **Defeitos que busca revelar:** requisito não atendido, mensagem confusa, fluxo incompleto, posição exibida sem qualidade suficiente e comportamento diferente do esperado pelo usuário.
 
-Diagrama: [PlantUML](diagramas/plantuml/03-01-aceitacao.puml) · [Mermaid](diagramas/mermaid/03-01-aceitacao.mmd)
+```mermaid
+sequenceDiagram
+    actor U as Usuario representante
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    participant S as ServicoPosicionamento (Servico Real)
+    participant R as ReceptorGPS (Servico Real)
+    participant P as ProcessadorSinalGPS (Servico Real)
+    participant C as CalculadoraPosicao (Servico Real)
+    participant T as Criterios de Aceitacao (Componente sob teste)
+    U->>A: solicitar minha posicao
+    A->>S: iniciar posicionamento
+    S->>R: coletar sinais de multiplos satelites
+    R->>P: sinais validos
+    P->>C: observacoes + tempo + orbitas
+    C-->>S: posicao
+    S-->>A: posicao com indicador de qualidade
+    A-->>U: exibir latitude/longitude
+    U->>T: avaliar fluxo
+    T-->>U: aprovado se posicao e qualidade forem exibidas
+```
+
+Fontes: [PlantUML](diagramas/plantuml/03-01-aceitacao.puml) · [Mermaid](diagramas/mermaid/03-01-aceitacao.mmd)
 
 ### 3.2 Teste Alfa — Alpha Testing
 
@@ -106,7 +282,21 @@ Diagrama: [PlantUML](diagramas/plantuml/03-01-aceitacao.puml) · [Mermaid](diagr
 
 **Defeitos que busca revelar:** navegação confusa, mensagens incompletas, falhas de integração observáveis pela equipe e problemas que aparecem em uso exploratório controlado.
 
-Diagrama: [PlantUML](diagramas/plantuml/03-02-alpha-testing.puml) · [Mermaid](diagramas/mermaid/03-02-alpha-testing.mmd)
+```mermaid
+flowchart LR
+    Q["Equipe interna de QA"] --> A["VersaoAlfa\nComponente sob teste"]
+    A --> I["AplicacaoNavegacao"]
+    I --> S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    G["ConstelacaoGPS\nSistema Externo simulado"] --> R
+    R -->|observacoes e qualidade| S
+    S --> A
+    A --> D["ColetorDiagnostico"]
+    D --> Q
+    G -.->|fornece sinais gravados| R
+```
+
+Fontes: [PlantUML](diagramas/plantuml/03-02-alpha-testing.puml) · [Mermaid](diagramas/mermaid/03-02-alpha-testing.mmd)
 
 ### 3.3 Teste Beta — Beta Testing
 
@@ -116,7 +306,22 @@ Diagrama: [PlantUML](diagramas/plantuml/03-02-alpha-testing.puml) · [Mermaid](d
 
 **Defeitos que busca revelar:** incompatibilidades de dispositivos, instabilidade de recepção, falhas intermitentes, problemas de compreensão e condições ambientais não cobertas no Alfa.
 
-Diagrama: [PlantUML](diagramas/plantuml/03-03-beta-testing.puml) · [Mermaid](diagramas/mermaid/03-03-beta-testing.mmd)
+```mermaid
+flowchart LR
+    U["Grupo piloto"] --> B["VersaoBeta\nComponente sob teste"]
+    B --> A["AplicacaoNavegacao"]
+    A --> S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    R -->|observacoes e qualidade| S
+    S --> A
+    A --> T["Telemetria"]
+    U --> F["Feedback"]
+    T --> B
+    F --> B
+    X["redes e aparelhos variados"] -.-> U
+```
+
+Fontes: [PlantUML](diagramas/plantuml/03-03-beta-testing.puml) · [Mermaid](diagramas/mermaid/03-03-beta-testing.mmd)
 
 ## 4. Teste de Sistema
 
@@ -128,7 +333,27 @@ Diagrama: [PlantUML](diagramas/plantuml/03-03-beta-testing.puml) · [Mermaid](di
 
 **Defeitos que busca revelar:** ausência de contingência, falha não registrada, encerramento indevido da solicitação, uso de dados sem indicação de degradação e recuperação que não retorna ao fluxo.
 
-Diagrama: [PlantUML](diagramas/plantuml/04-01-recuperacao.puml) · [Mermaid](diagramas/mermaid/04-01-recuperacao.mmd)
+```mermaid
+sequenceDiagram
+    participant A as AplicacaoNavegacao (Sistema Externo)
+    participant S as ServicoPosicionamento (Servico Real)
+    participant E as ServicoEfemerides (Servico Real)
+    participant R as RepositorioDadosOrbitais (Falha Injetada)
+    participant K as CacheEfemerides (Servico Real)
+    participant M as MonitorRecuperacao
+    A->>S: solicitarPosicao()
+    S->>E: obterDadosOrbitais()
+    E->>R: consultar()
+    R--xE: indisponibilidade simulada
+    E->>M: registrar falha
+    E->>K: obter ultima copia valida
+    K-->>E: efemerides de contingencia
+    E-->>S: dados orbitais + indicador degradado
+    S-->>A: posicao calculada sem encerrar fluxo
+    M-->>A: alerta operacional
+```
+
+Fontes: [PlantUML](diagramas/plantuml/04-01-recuperacao.puml) · [Mermaid](diagramas/mermaid/04-01-recuperacao.mmd)
 
 ### 4.2 Teste de Segurança — Security Testing
 
@@ -138,7 +363,20 @@ Diagrama: [PlantUML](diagramas/plantuml/04-01-recuperacao.puml) · [Mermaid](dia
 
 **Defeitos que busca revelar:** atualização sem autorização, ausência de auditoria, aceitação de dados adulterados, permissão excessiva e falta de separação entre operador autorizado e não autorizado.
 
-Diagrama: [PlantUML](diagramas/plantuml/04-02-seguranca.puml) · [Mermaid](diagramas/mermaid/04-02-seguranca.mmd)
+```mermaid
+flowchart LR
+    X["Operador sem permissao"] --> E["EstacaoControleTerrestre\nSistema Externo"]
+    E --> A["ControleAcessoAtualizacao\nComponente sob teste"]
+    A --> U["AuditoriaSeguranca"]
+    A -. bloqueia .-> R[("RepositorioDadosOrbitais\nServico Real")]
+    O["Operador autorizado"] --> E
+    E --> A
+    A -->|atualizar dados orbitais| R
+    X -.->|efemerides adulteradas| E
+    O -.->|efemerides assinadas| E
+```
+
+Fontes: [PlantUML](diagramas/plantuml/04-02-seguranca.puml) · [Mermaid](diagramas/mermaid/04-02-seguranca.mmd)
 
 ### 4.3 Teste de Estresse — Stress Testing
 
@@ -148,7 +386,18 @@ Diagrama: [PlantUML](diagramas/plantuml/04-02-seguranca.puml) · [Mermaid](diagr
 
 **Defeitos que busca revelar:** queda total, esgotamento de memória ou conexões, filas sem limite, ausência de rejeição controlada, crescimento desordenado de erros e degradação sem observabilidade.
 
-Diagrama: [PlantUML](diagramas/plantuml/04-03-estresse.puml) · [Mermaid](diagramas/mermaid/04-03-estresse.mmd)
+```mermaid
+flowchart LR
+    G["GeradorCarga\nComponente sob teste"] -->|10.000 solicitacoes simultaneas\nvalor ficticio adotado| S["ServicoPosicionamento"]
+    S --> R["ReceptorGPS"]
+    R --> C["CalculadoraPosicao"]
+    S --> L["LimitadorFila"]
+    L -->|rejeicao controlada / espera| G
+    S --> M["MonitorRecursos"]
+    M --> D["RelatorioDegradacao"]
+```
+
+Fontes: [PlantUML](diagramas/plantuml/04-03-estresse.puml) · [Mermaid](diagramas/mermaid/04-03-estresse.mmd)
 
 ### 4.4 Teste de Desempenho — Performance Testing
 
@@ -160,7 +409,29 @@ Diagrama: [PlantUML](diagramas/plantuml/04-03-estresse.puml) · [Mermaid](diagra
 
 **Defeitos que busca revelar:** gargalos de processamento, consulta lenta, baixa vazão, uso excessivo de CPU ou memória e descumprimento da meta de resposta.
 
-Diagrama: [PlantUML](diagramas/plantuml/04-04-desempenho.puml) · [Mermaid](diagramas/mermaid/04-04-desempenho.mmd)
+```mermaid
+sequenceDiagram
+    participant G as GeradorCenarios (Componente sob teste)
+    participant A as AplicacaoNavegacao
+    participant S as ServicoPosicionamento
+    participant R as ReceptorGPS
+    participant P as ProcessadorSinalGPS
+    participant C as CalculadoraPosicao
+    participant M as ColetorMetricas
+    G->>A: executar cenarios representativos
+    A->>S: solicitarPosicao()
+    S->>R: coletar sinais gravados
+    R->>P: entregar sinais validos
+    P->>C: calcular com efemerides em cache
+    C-->>S: posicao
+    S-->>A: resposta
+    A-->>G: fim do cenario
+    G->>M: registrar latencia, vazao e recursos
+    M-->>G: comparar com limite do estudo
+    Note over G,M: Meta de 95% em até 2 s — valor fictício adotado para este estudo de caso.
+```
+
+Fontes: [PlantUML](diagramas/plantuml/04-04-desempenho.puml) · [Mermaid](diagramas/mermaid/04-04-desempenho.mmd)
 
 ## Conclusão
 
